@@ -76,8 +76,10 @@ def get_bbox_range(img_list,upperbondrange =0):
             average_range_plus.append(range_plus)
             if upperbondrange != 0:
                 half_face_coord[1] = upperbondrange+half_face_coord[1] #手动调整  + 向下（偏29）  - 向上（偏28）
-
-    text_range=f"Total frame:「{len(frames)}」 Manually adjust range : [ -{int(sum(average_range_minus) / len(average_range_minus))}~{int(sum(average_range_plus) / len(average_range_plus))} ] , the current value: {upperbondrange}"
+    
+    minus_avg = int(sum(average_range_minus) / len(average_range_minus)) if len(average_range_minus) > 0 else 0
+    plus_avg = int(sum(average_range_plus) / len(average_range_plus)) if len(average_range_plus) > 0 else 0
+    text_range=f"Total frame:「{len(frames)}」 Manually adjust range : [ -{minus_avg}~{plus_avg} ] , the current value: {upperbondrange}"
     return text_range
     
 
@@ -107,8 +109,8 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
         # Add the bounding box to a tuple and append it to the coordinates list
         for j, f in enumerate(bbox):
             if f is None: # no face in the image
-                coords_list += [coord_placeholder]
-                continue
+                h, w = fb[j].shape[:2]
+                f = [w//4, h//4, 3*w//4, 3*h//2]
             
             half_face_coord =  face_land_mark[29]#np.mean([face_land_mark[28], face_land_mark[29]], axis=0)
             range_minus = (face_land_mark[30]- face_land_mark[29])[1]
@@ -132,7 +134,9 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
                 coords_list += [f_landmark]
     
     print("********************************************bbox_shift parameter adjustment**********************************************************")
-    print(f"Total frame:「{len(frames)}」 Manually adjust range : [ -{int(sum(average_range_minus) / len(average_range_minus))}~{int(sum(average_range_plus) / len(average_range_plus))} ] , the current value: {upperbondrange}")
+    minus_avg = int(sum(average_range_minus) / len(average_range_minus)) if len(average_range_minus) > 0 else 0
+    plus_avg = int(sum(average_range_plus) / len(average_range_plus)) if len(average_range_plus) > 0 else 0
+    print(f"Total frame:「{len(frames)}」 Manually adjust range : [ -{minus_avg}~{plus_avg} ] , the current value: {upperbondrange}")
     print("*************************************************************************************************************************************")
     return coords_list,frames
     
