@@ -59,12 +59,48 @@ class FaceParsing():
     def model_init(self,
                    resnet_path=None,
                    model_pth=None):
-        import os
-        MUSETALK_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        current_file = os.path.abspath(__file__)
+
+        # Probe multiple parent levels to support layouts like repo/musetalk/musetalk/...,
+        # editable installs, and service backends with a different working directory.
+        candidate_roots = [
+            os.path.dirname(os.path.dirname(os.path.dirname(current_file))),
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_file)))),
+            os.getcwd(),
+        ]
+
+        # Remove duplicates while preserving order.
+        unique_roots = []
+        for root in candidate_roots:
+            if root not in unique_roots:
+                unique_roots.append(root)
+
         if resnet_path is None:
-            resnet_path = os.path.join(MUSETALK_ROOT, 'models', 'face-parse-bisent', 'resnet18-5c106cde.pth')
+            for root in unique_roots:
+                candidate = os.path.join(root, 'models', 'face-parse-bisent', 'resnet18-5c106cde.pth')
+                if os.path.exists(candidate):
+                    resnet_path = candidate
+                    break
+            if resnet_path is None:
+                resnet_path = os.path.join(unique_roots[0], 'models', 'face-parse-bisent', 'resnet18-5c106cde.pth')
+
         if model_pth is None:
-            model_pth = os.path.join(MUSETALK_ROOT, 'models', 'face-parse-bisent', '79999_iter.pth')
+            for root in unique_roots:
+                candidate = os.path.join(root, 'models', 'face-parse-bisent', '79999_iter.pth')
+                if os.path.exists(candidate):
+                    model_pth = candidate
+                    break
+            if model_pth is None:
+                model_pth = os.path.join(unique_roots[0], 'models', 'face-parse-bisent', '79999_iter.pth')
+
+        if not os.path.exists(resnet_path) or not os.path.exists(model_pth):
+            searched_dirs = [os.path.join(root, 'models', 'face-parse-bisent') for root in unique_roots]
+            raise FileNotFoundError(
+                "FaceParsing weights not found. "
+                f"resnet_path={resnet_path}, model_pth={model_pth}. "
+                f"Searched: {searched_dirs}. "
+                "Download weights into models/face-parse-bisent or pass explicit paths."
+            )
         net = BiSeNet(resnet_path)
         if torch.cuda.is_available():
             net.cuda()
