@@ -56,9 +56,15 @@ class FaceParsing():
         cv2.rectangle(mask, (center + right_cheek_width, 0), (512, 512), 255, -1)  # Right cheek
         return mask
 
-    def model_init(self, 
-                   resnet_path='./models/face-parse-bisent/resnet18-5c106cde.pth', 
-                   model_pth='./models/face-parse-bisent/79999_iter.pth'):
+    def model_init(self,
+                   resnet_path=None,
+                   model_pth=None):
+        import os
+        MUSETALK_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        if resnet_path is None:
+            resnet_path = os.path.join(MUSETALK_ROOT, 'models', 'face-parse-bisent', 'resnet18-5c106cde.pth')
+        if model_pth is None:
+            model_pth = os.path.join(MUSETALK_ROOT, 'models', 'face-parse-bisent', '79999_iter.pth')
         net = BiSeNet(resnet_path)
         if torch.cuda.is_available():
             net.cuda()
