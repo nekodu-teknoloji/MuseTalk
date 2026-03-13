@@ -61,7 +61,7 @@ class FaceParsing():
                    model_pth=None):
         current_file = os.path.abspath(__file__)
 
-        # Probe multiple parent levels to support layouts like repo/musetalk/musetalk/...,
+        # Probe multiple parent levels to support layouts like repo/musetalk/musetalk/
         # editable installs, and service backends with a different working directory.
         candidate_roots = [
             os.path.dirname(os.path.dirname(os.path.dirname(current_file))),
